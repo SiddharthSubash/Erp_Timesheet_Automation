@@ -7,9 +7,12 @@ Introduction:
 
 * This code gets the input from the user via terminal and does the work for the user.
 
+-------------------------------------------
 Prerequisite:
+-------------------------------------------
 
 There are two methods to install the dependencies before the program can be executed.
+
 -------------------------------------------
 Installing Dependencies via make install:
 -------------------------------------------
