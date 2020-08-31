@@ -29,7 +29,7 @@ Manual Installation of Dependencies:
 Installing Selenium:
 -------------------------------------------
 
-pip install -U selenium
+pip3 install -U selenium
 
 --------------------------------------------------------------------------------------------------------
 For installing geckodriver type the following command in the terminal and extract the files.
