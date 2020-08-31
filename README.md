@@ -1,6 +1,4 @@
 # Erp_Timesheet_Automation
-ERP Timesheet Automation:
-
 Introduction:
 
 * This code creates a new timesheet for the user and populates the field based on the input from the user and update the timesheet automatically.
