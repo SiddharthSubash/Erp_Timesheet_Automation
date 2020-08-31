@@ -45,9 +45,7 @@ Before proceeding the  next step(make setlink), the user must "close the termina
 
 2)make setlink - This step is required for the 'update_timesheet' code to navigate to the correct erp link while executing. The valid erp link will be set by the user by using the command 
 
-------------------------------------------
 make setlink link=["valid erp link"]
-------------------------------------------
 
 3) make clean - This command will remove the geckodriver tar file and its extracts.
 
