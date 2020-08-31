@@ -20,11 +20,11 @@ Manual Installation of Dependencies:
 -------------------------------------------
 * This code requires selenium package and geckodriver(firefox) for the web-browser.
 
+-------------------------------------------
 Installing Selenium:
+-------------------------------------------
 
--------------------------
 pip install -U selenium
--------------------------
 
 For installing geckodriver type the following command in the terminal and extract the files.
 
