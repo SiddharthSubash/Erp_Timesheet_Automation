@@ -50,11 +50,15 @@ Before proceeding the  next step(make setlink), the user must "close the termina
 
 2)make setlink - This step is required for the 'update_timesheet' code to navigate to the correct erp link while executing. The valid erp link will be set by the user by using the command 
 
-make setlink link=["valid erp url address"]
+make setlink link=valid erp url address
 
-3) make clean - This command will remove the geckodriver tar file and its extracts.
+3) make setpassword - This step may be used by the user, which will save the username and password in a file, to prevent entering user's credentials everytime when the user executes the program.
 
-4) After following all the above steps, the user can run the program by typing "update_timesheet" in the terminal.
+make setpassword username=yourusername password=yourpassword
+
+4) make clean - This command will remove the geckodriver tar file and its extracts.
+
+5) After following all the above steps, the user can run the program by typing "update_timesheet" in the terminal.
 
 * The user can run the python code anywhere, since the "make install" command adds the python file's location to the PATH
 
@@ -77,3 +81,5 @@ Point To be Noted:
 * User may or may not type the full project name, as the code will match the name typed with the suggestion given by project column in ERP and will click the first suggestion provided.
 
 * Hence it is advisable for the user to type atleast half of the name of the project as many projects may start with the same letter.
+
+* make setpassword reduces the burden of entering the credentials everytime when the user executes the timesheet automation. Instead the user will enter credentials only once and it will get stored in a file, and the program will read the credentials from the file and use it.

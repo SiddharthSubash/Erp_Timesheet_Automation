@@ -1,23 +1,34 @@
 #!/usr/bin/env python3
 import time
+import signal
+import sys
+import datetime
+import argparse
+import os
+import getpass
+from os.path import expanduser
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-import datetime
-import argparse
-import os
 
-from_time_date = 0
-specify_hr = 0
-specify_note = 0
-specify_project = 0
-start_time = 0
-activity_choice = 0
-choice = []
-nonexist_project_flag = False
+FROM_TIME_DATE = 0
+SPECIFY_HR = 0
+SPECIFY_NOTE = 0
+SPECIFY_PROJECT = 0
+START_TIME = 0
+ACTIVITY_CHOICE = 0
+CHOICE = []
+NONEXIST_PROJECT_FLAG = False
+
+
+def signal_handler(sig, frame):
+    print('You pressed Ctrl+C!')
+    sys.exit(0)
+
 
 def click_url(driver, erp_link):
     try:
@@ -26,61 +37,75 @@ def click_url(driver, erp_link):
         driver.set_page_load_timeout(10)
         return driver
     except:
-        print("Either the URL could not be found or network has been disabled.")
-        print("Kindly check the above condition and re-run the program. Thank You")
+        print("Either the URL could not be found or\
+        network has been disabled.")
+        print("Kindly check the above condition and\
+        re-run the program. Thank You")
         driver.quit()
         return False
 
+
 def click_erp_user_id(*argv):
     try:
-        elem = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located((By.ID, "login_email")))
+        elem = WebDriverWait(argv[0], 10)\
+            .until(EC.presence_of_element_located((By.ID, "login_email")))
         elem.clear()
         elem.send_keys(argv[1])
         elem.send_keys(Keys.RETURN)
+        return True
     except:
         print("timeout erp user id")
         return False
 
+
 def enter_erp_user_pwd(*argv):
     ''' track user_credentials '''
     try:
-        elem = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located((By.ID, "login_password")))
+        elem = WebDriverWait(argv[0], 10)\
+            .until(EC.presence_of_element_located((By.ID, "login_password")))
         elem.clear()
         elem.send_keys(argv[1])
         elem.send_keys(Keys.RETURN)
         time.sleep(1)
-        verify_credentials = argv[0].find_element_by_xpath("/html/body/div/div[1]/div/div[2]/div/div/div/div[2]/section[1]/div[1]/form/div/span").text.lower()
+        verify_credentials = argv[0].find_element_by_xpath\
+            ("/html/body/div/div[1]/div/div[2]/div/div/div/div[2]/section[1]/div[1]/form/div/span")\
+            .text.lower()
         print("login_status=", verify_credentials)
-        if ('success' == verify_credentials):
+        if verify_credentials == 'success':
             return True
         else:
             time.sleep(5)
-            verify_credentials = argv[0].find_element_by_xpath("/html/body/div/div[1]/div/div[2]/div/div/div/div[2]/section[1]/div[1]/form/div/span").text.lower()
-            if ('success' != verify_credentials):
+            verify_credentials = argv[0].find_element_by_xpath\
+            ("/html/body/div/div[1]/div/div[2]/div/div/div/div[2]/section[1]/div[1]/form/div/span")\
+                .text.lower()
+            if verify_credentials != 'success':
                 return False
     except:
         print("timeout password")
         return False
 
+
 def create_new_time_sheet(*argv):
     try:
         print("entering new timesheet")
-        
-        elem = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located((By.ID, "navbar-search")))
+
+        elem = WebDriverWait(argv[0], 10)\
+        .until(EC.presence_of_element_located((By.ID, "navbar-search")))
 
         time.sleep(1)
         elem.clear()
         time.sleep(1.5)
-        
+
         elem.send_keys("New Timesheet")
         time.sleep(2.0)
-        
+
         elem.send_keys(Keys.ARROW_DOWN)
         time.sleep(0.5)
         elem.send_keys(Keys.RETURN)
-        entered_text = argv[0].find_element_by_css_selector(".form-group-sm > div:nth-child(1) > span:nth-child(3)").text
-        print("Timesheet Entered=",entered_text)
-        if (entered_text != "New Timesheet"):
+        entered_text = argv[0].find_element_by_css_selector\
+        (".form-group-sm > div:nth-child(1) > span:nth-child(3)").text
+        print("Timesheet Entered=", entered_text)
+        if entered_text != "New Timesheet":
             return False
         print("Trrr")
 
@@ -88,22 +113,29 @@ def create_new_time_sheet(*argv):
         print("timesheet timeout of time")
         return False
 
+
 def select_activity_type(*argv):
 
     try:
         print("enters activity_type")
 
-        
-        WebDriverWait(argv[0], 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".rows > div:nth-child(1) > div:nth-child(1) > div:nth-child(2)"))).click()
-        elem_item = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".editable-row > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > input:nth-child(1)")))
+
+        WebDriverWait(argv[0], 10).until(EC.presence_of_element_located\
+        ((By.CSS_SELECTOR, ".rows > div:nth-child(1) > div:nth-child(1) > div:nth-child(2)")))\
+        .click()
+        elem_item = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located\
+        ((By.CSS_SELECTOR, ".editable-row > div:nth-child(2) > div:nth-child(1) > div:nth-child(1)\
+        > div:nth-child(1) > div:nth-child(1) > input:nth-child(1)")))
         elem_item.clear()
         time.sleep(0.5)
         elem_item.send_keys(argv[1])
         time.sleep(0.5)
 
-        entered_text = argv[0].find_element_by_css_selector(".editable-row > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > span:nth-child(3)").text
+        entered_text = argv[0].find_element_by_css_selector\
+        (".editable-row > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) >\
+        div:nth-child(1) > div:nth-child(1) > span:nth-child(3)").text
         print("Activity Entered=", entered_text)
-        if (entered_text != argv[1]):
+        if entered_text != argv[1]:
             return False
         time.sleep(1)
         elem_item.send_keys(Keys.ENTER, Keys.RETURN)
@@ -112,32 +144,42 @@ def select_activity_type(*argv):
         print("activity timeout")
         return False
 
+
 def select_date(*argv):
     try:
         print("enters date")
-        WebDriverWait(argv[0], 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".rows > div:nth-child(1) > div:nth-child(1) > div:nth-child(3)"))).click()
-        
-        elem_pass2 = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".editable-row > div:nth-child(3) > div:nth-child(1) > div:nth-child(1) > input:nth-child(1)")))
+        WebDriverWait(argv[0], 10).until(EC.presence_of_element_located\
+        ((By.CSS_SELECTOR, ".rows > div:nth-child(1) > div:nth-child(1) >\
+        div:nth-child(3)"))).click()
+
+        elem_pass2 = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located\
+        ((By.CSS_SELECTOR, ".editable-row > div:nth-child(3) > div:nth-child(1) >\
+        div:nth-child(1) > input:nth-child(1)")))
 
         elem_pass2.clear()
         time.sleep(0.5)
         elem_pass2.send_keys(argv[1], Keys.END, Keys.SPACE, Keys.RETURN)
-    
+
         time.sleep(0.5)
         elem_pass2.send_keys(Keys.END, Keys.BACK_SPACE, "15", Keys.RETURN)
 
         time.sleep(0.5)
 
-        elem_pass2.send_keys(Keys.END, Keys.BACK_SPACE, Keys.BACK_SPACE, Keys.BACK_SPACE, Keys.BACK_SPACE, Keys.BACK_SPACE, Keys.BACK_SPACE, Keys.BACK_SPACE, Keys.BACK_SPACE, argv[2], Keys.RETURN)
+        elem_pass2.send_keys(Keys.END, Keys.BACK_SPACE, Keys.BACK_SPACE, Keys.BACK_SPACE,\
+        Keys.BACK_SPACE, Keys.BACK_SPACE, Keys.BACK_SPACE, Keys.BACK_SPACE,\
+        Keys.BACK_SPACE, argv[2], Keys.RETURN)
 
     except TimeoutException:
         print("date timeout")
         return False
 
+
 def select_hrs(*argv):
     try:
         print("enters hrs")
-        elem_pass = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".editable-row > div:nth-child(4) > div:nth-child(1) > div:nth-child(1) > input:nth-child(1)")))
+        elem_pass = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located\
+        ((By.CSS_SELECTOR, ".editable-row > div:nth-child(4) > div:nth-child(1) >\
+        div:nth-child(1) > input:nth-child(1)")))
 
         elem_pass.clear()
         time.sleep(0.5)
@@ -149,49 +191,57 @@ def select_hrs(*argv):
         print("hr timeout")
         return False
 
-def check_selected_project(driver):
-    global nonexist_project_flag
-    try:
-        close_button = driver.find_element_by_xpath("/html/body/div[17]/div[2]/div/div[1]/div/div[2]/div/button[1]/span").text
-        if (close_button):
 
-            driver.find_element_by_xpath("/html/body/div[16]/div[2]/div/div[1]/div/div[2]/div/button[1]").click()
-            nonexist_project_flag = True
+def check_selected_project(driver):
+    global NONEXIST_PROJECT_FLAG
+    try:
+        close_button = driver.find_element_by_xpath\
+        ("/html/body/div[17]/div[2]/div/div[1]/div/div[2]/div/button[1]/span").text
+        if close_button:
+
+            driver.find_element_by_xpath\
+            ("/html/body/div[16]/div[2]/div/div[1]/div/div[2]/div/button[1]").click()
+            NONEXIST_PROJECT_FLAG = True
             return False
         else:
             return True
     except:
         return True
 
+
 def select_project(*argv):
-    global nonexist_project_flag
+    global NONEXIST_PROJECT_FLAG
 
     try:
         print("enters select_project")
 
-        elem_pass = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".editable-row > div:nth-child(5) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > input:nth-child(1)")))
+        elem_pass = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located\
+        ((By.CSS_SELECTOR, ".editable-row > div:nth-child(5) > div:nth-child(1) >\
+        div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > input:nth-child(1)")))
 
         elem_pass.clear()
         time.sleep(0.5)
         elem_pass.send_keys(argv[1])
 
-        time.sleep(1)
-    
+        time.sleep(1.5)
+
         elem_pass.send_keys(Keys.ENTER, Keys.RETURN)
 
         time.sleep(1)
 
-        if (check_selected_project(argv[0]) == False):
+        if check_selected_project(argv[0]) == False:
             return False
 
     except:
         print("project timeout")
         return False
 
+
 def select_note(*argv):
     try:
         print("enters note")
-        elem_pass = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.note-editable:nth-child(4)")))
+        elem_pass = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located\
+        ((By.CSS_SELECTOR, "div.note-editable:nth-child(4)")))
 
         elem_pass.clear()
         time.sleep(0.5)
@@ -203,15 +253,18 @@ def select_note(*argv):
         print("note timeout")
         return False
 
+
 def select_save_button(*argv):
     try:
-        
-        save_button = argv[0].find_element_by_css_selector("button.btn:nth-child(7) > span:nth-child(2)").text.lower()
+
+        save_button = argv[0].find_element_by_css_selector("button.btn:nth-child(7)\
+        > span:nth-child(2)").text.lower()
         print("save_button=", save_button)
-        if (save_button == 'save'):
+        if save_button == 'save':
             print("entering save")
 
-            elem_pass = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button.btn:nth-child(7)")))
+            elem_pass = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located\
+            ((By.CSS_SELECTOR, "button.btn:nth-child(7)")))
             elem_pass.click()
         else:
             print("save button not foundd")
@@ -220,29 +273,36 @@ def select_save_button(*argv):
         print("save timeout failed")
         return False
 
+
 def select_submit_button(*argv):
     try:
         time.sleep(1.5)
-        submit_button = argv[0].find_element_by_css_selector("button.btn:nth-child(7) > span:nth-child(2)").text.lower()
+        submit_button = argv[0].find_element_by_css_selector\
+        ("button.btn:nth-child(7) > span:nth-child(2)").text.lower()
         print("submit_button=", submit_button)
-        if (submit_button == 'submit'):
+        if submit_button == 'submit':
             print("entering submit")
             time.sleep(2.5)
-            argv[0].find_element_by_xpath("/html/body/div[1]/div/div[2]/div[1]/div/div/div[2]/button[2]").click()
+            argv[0].find_element_by_xpath("/html/body/div[1]/div/div[2]/\
+            div[1]/div/div/div[2]/button[2]").click()
 
-        elif (argv[0].find_element_by_xpath("/html/body/div[16]/div[2]/div")):
+        elif argv[0].find_element_by_xpath("/html/body/div[16]/div[2]/div"):
             print("Conflict found")
             time.sleep(0.5)
             print("close button click")
-            argv[0].find_element_by_xpath("/html/body/div[16]/div[2]/div/div[1]/div/div[2]/div/button[1]").click()
+            argv[0].find_element_by_xpath("/html/body/div[16]/div[2]/div/div[1]/\
+            div/div[2]/div/button[1]").click()
             time.sleep(0.5)
             print("click timesheet of the user")
-            argv[0].find_element_by_xpath("/html/body/div[1]/header/div/div/div[1]/ul/li[2]/a").click()
+            argv[0].find_element_by_xpath("/html/body/div[1]/header/div/div/\
+            div[1]/ul/li[2]/a").click()
             time.sleep(2.5)
             print("click the conflicting draft and will try to submit it")
-            argv[0].find_element_by_xpath("/html/body/div[1]/div/div[3]/div[2]/div[2]/div/div[3]/div[2]/div[1]/div[3]/div/div[5]/div[3]/div/div/div[1]/div[2]").click()
+            argv[0].find_element_by_xpath("/html/body/div[1]/div/div[3]/div[2]/\
+            div[2]/div/div[3]/div[2]/div[1]/div[3]/div/div[5]/div[3]/div/div/div[1]/div[2]").click()
             time.sleep(2.5)
-            argv[0].find_element_by_xpath("/html/body/div[1]/div/div[2]/div[1]/div/div/div[2]/button[2]").click()
+            argv[0].find_element_by_xpath("/html/body/div[1]/div/div[2]/div[1]/\
+            div/div/div[2]/button[2]").click()
             return True
         else:
             print("submit button not found")
@@ -251,14 +311,18 @@ def select_submit_button(*argv):
         print("submit timeout failed")
         return False
 
+
 def confirm_submission(*argv):
 
     try:
-        elem_pass = WebDriverWait(argv[0], 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.modal-dialog:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > button:nth-child(2)"))).click()
+        WebDriverWait(argv[0], 10).until(EC.presence_of_element_located\
+        ((By.CSS_SELECTOR, "div.modal-dialog:nth-child(2) > div:nth-child(1) > div:nth-child(1) >\
+        div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > button:nth-child(2)"))).click()
 
     except:
         print("confirm submission timeout failed")
         return False
+
 
 def refresh_page(driver):
     try:
@@ -270,93 +334,103 @@ def refresh_page(driver):
         return False
     return True
 
+
 def get_input():
 
     input_text = input()
     return input_text
 
-def validate_page(function_name = [], *argv):
-    global nonexist_project_flag
+
+def validate_page(function_name=[], *argv):
+    global NONEXIST_PROJECT_FLAG
     count = 1
     repeat_flag = False
 
     print("entering validate page")
     redo_flag = False
-    while (function_name(*argv) == False):
+    while function_name(*argv) == False:
         print("Failed function_name", function_name)
-        print("function_repeat_count=",count)
+        print("function_repeat_count=", count)
 
-        if (function_name == select_project and nonexist_project_flag == True):
+        if function_name == select_project and NONEXIST_PROJECT_FLAG == True:
             break
 
-        if (function_name == click_erp_user_id or function_name == enter_erp_user_pwd or function_name == select_save_button or function_name == select_submit_button or function_name == confirm_submission):
+        if function_name == click_erp_user_id or function_name == enter_erp_user_pwd\
+        or function_name == select_save_button or function_name == select_submit_button\
+        or function_name == confirm_submission:
+
             redo_flag = True
             refresh_page(argv[0])
             break
         refresh_page(argv[0])
         count = count + 1
-        if (count >= 6):
+        if count >= 6:
             repeat_flag = True
             break
     print("exiting valid page")
-    if (redo_flag == True):
+    if redo_flag == True:
         return None
-    if (nonexist_project_flag == True):
+    if NONEXIST_PROJECT_FLAG == True:
         return False
-    if (repeat_flag == True):
+    if repeat_flag == True:
 
         argv[0].close()
         return False
     return True
 
+
 def fill_up_user_entries(driver):
-    global activity_choice, choice, from_time_date, start_time, specify_hr, specify_project, specify_note, nonexist_project_flag
+    global ACTIVITY_CHOICE, CHOICE, FROM_TIME_DATE, START_TIME,\
+    SPECIFY_HR, SPECIFY_PROJECT, SPECIFY_NOTE, NONEXIST_PROJECT_FLAG
+
     count = True
     count1 = True
     print("Entering Activity type")
-    if (validate_page(select_activity_type, driver, choice[activity_choice]) == False):
+    if validate_page(select_activity_type, driver, CHOICE[ACTIVITY_CHOICE]) == False:
         print("False")
         count1 = False
     if (count and count1) == False:
         return False
 
     print("Entering the selected date")
-    if (validate_page(select_date, driver, from_time_date, start_time) == False):
+    if validate_page(select_date, driver, FROM_TIME_DATE, START_TIME) == False:
         count1 = False
     if (count and count1) == False:
         return False
 
     print("Entering the selected hrs")
-    if (validate_page(select_hrs, driver, specify_hr) == False):
+    if validate_page(select_hrs, driver, SPECIFY_HR) == False:
         count1 = False
     if (count and count1) == False:
         return False
 
     print("Entering the name of the selected project")
-    if (validate_page(select_project, driver, specify_project) == False):
-        if (nonexist_project_flag == True):
+    if validate_page(select_project, driver, SPECIFY_PROJECT) == False:
+        if NONEXIST_PROJECT_FLAG == True:
             return False
         count1 = False
 
     if (count and count1) == False:
         return False
-    
+
     print("Entering notes")
-    if (validate_page(select_note, driver, specify_note) == False):
+    if validate_page(select_note, driver, SPECIFY_NOTE) == False:
         count1 = False
     if (count and count1) == False:
         return False
-    
+
     return True
+
 
 def get_activity_name():
     choice_input = get_input()
     return choice_input
 
+
 def validate_activity_choice(choice_input):
-    global choice
+    global CHOICE
     try:
-        if (0 <= int(choice_input) <= len(choice) - 1):
+        if 0 <= int(choice_input) <= len(CHOICE) - 1:
             return True
         else:
             print("Enter one of the option as shown")
@@ -365,25 +439,29 @@ def validate_activity_choice(choice_input):
         print("Incorrect Input.Enter only Numbers")
         return False
 
-def get_date_input():
-    print ("Enter the date, month and year")
-    date = get_input()
-    month = get_input()
-    year = get_input()
-    return date, month, year
 
-def validate_date(date, month, year):
+def get_date_input():
+    print("Enter the date, month and year (dd/mm/yy)")
+    date_input = get_input()
+    date = date_input.split("/")
+    return date
+
+
+def validate_date(input_date):
     try:
-        datetime.datetime(year = int(year), month = int(month), day = int(date))
+        datetime.datetime(year=int(input_date[2]), month=int(input_date[1]), day=int(input_date[0]))
         return True
     except:
-        print("Incorrect Date or Valid Date mentioned is not present in that Year. Please Try Again")
+        print("Incorrect Date or Valid Date mentioned is not present in that Year.\
+            Please Try Again")
         return False
+
 
 def get_time():
     time = get_input()
 
     return time
+
 
 def validate_time(time):
     try:
@@ -393,81 +471,131 @@ def validate_time(time):
         print("Incorrect Input.Enter only Numbers")
         return False
 
+
 def get_project_name():
 
     project_name = get_input()
     return project_name
 
+
 def validate_project_name(project_name):
-    if (len(project_name) == 0):
+    if len(project_name) == 0:
         print("Project Name should not be left blank")
         return False
     return True
 
-def perform_operation(url_link):
-    global activity_choice, choice, from_time_date, start_time, specify_hr, specify_project, specify_note
+
+def check_file_contents(contents):
+    if len(contents) == 1:
+        print("only URL is set")
+        return 0
+    elif len(contents) == 2:
+        print("only user name and password is set")
+        return 1
+    elif len(contents) == 3:
+        print("Both URL and user credentials are set")
+        return 2
+
+
+def validate_note(note):
+    if (len(note) == 0):
+        print("Note should not be left blank")
+        return False
+    return True
+
+
+def perform_operation(contents):
+    global ACTIVITY_CHOICE, CHOICE, FROM_TIME_DATE, START_TIME,\
+    SPECIFY_HR, SPECIFY_PROJECT, SPECIFY_NOTE
+
     driver = 0
     fill_up_flag = False
 
-    while (True):
-        print("Enter user name:")
-        user_name = get_input()
-        if (len(user_name) == 0):
+    signal.signal(signal.SIGINT, signal_handler)
+    print('Press Ctrl+C')
+
+    file_data = check_file_contents(contents)
+    if file_data == 1:
+        print_url_error()
+        return False
+
+    while True:
+
+        if file_data == 2:
+            user_name = contents[1]
+        else:
+            print("Enter user name:")
+            user_name = get_input()
+        if len(user_name) == 0:
             print("User Name should not be left blank")
             continue
         break
 
-    print("Enter user password:")
-    user_pwd = get_input()
+    if file_data == 2:
+        user_pwd = contents[2]
+    else:
+        print("Enter user password:")
+        user_pwd = getpass.getpass()
 
-    print("Enter the ERP Link")
-    erp_link = url_link
+    erp_link = contents[0]
+    print("url", erp_link)
 
-    while (True):
+    while True:
         print("Select the Activity Type:")
-        choice = ["Development", "Testing", "Wlan Testing", "Networking", "building source code", "Planning", "study", "Support", "Build and integration", "Training", "Research", "Integration and release", "Communication", "Execution", "Proposal Writing"]
-        for i in range(0, len(choice)):
-            print(i,".",choice[i])
-        activity_choice = get_activity_name()
-        if (validate_activity_choice(activity_choice) == False):
+        print("\n")
+        CHOICE = ["Development", "Testing", "Wlan Testing", "Networking", "building source code",\
+        "Planning", "study", "Support", "Build and integration", "Training", "Research",\
+        "Integration and release", "Communication", "Execution", "Proposal Writing"]
+
+        for i in range(0, len(CHOICE)):
+            print(i, ".", CHOICE[i])
+        ACTIVITY_CHOICE = get_activity_name()
+        if validate_activity_choice(ACTIVITY_CHOICE) == False:
             continue
         break
 
-    activity_choice = int(activity_choice)
+    ACTIVITY_CHOICE = int(ACTIVITY_CHOICE)
 
-    while (True):
-        date, month, year = get_date_input()
-        if (validate_date(date, month, year) == False):
+    while True:
+        input_date = get_date_input()
+
+        if validate_date(input_date) == False:
             continue
+        date = input_date[0]
+        month = input_date[1]
+        year = input_date[2]
         break
-    
-    from_time_date = date + "." + month + "." + year
-    
-    while (True):
+
+    FROM_TIME_DATE = date + "." + month + "." + year
+
+    while True:
         print("Enter Start Time")
-        start_time = get_time()
-        if (validate_time(start_time) == False):
+        START_TIME = get_time()
+        if validate_time(START_TIME) == False:
             continue
         break
-    
-    while (True):
+
+    while True:
         print("Enter how many hours worked:")
-        specify_hr = get_time()
-        if (validate_time(specify_hr) == False):
+        SPECIFY_HR = get_time()
+        if validate_time(SPECIFY_HR) == False:
             continue
         break
-    
-    while (True):
+
+    while True:
         print("Specify the name of the project you are currently working on:")
-        specify_project = get_project_name()
-        if (validate_project_name(specify_project) == False):
+        SPECIFY_PROJECT = get_project_name()
+        if validate_project_name(SPECIFY_PROJECT) == False:
+            continue
+        break
+    while True:
+        print("Any Note to be added about the working project")
+        SPECIFY_NOTE = get_input()
+        if validate_note(SPECIFY_NOTE) == False:
             continue
         break
 
-    print("Any Note to be added about the working project(To be left Blank(Press 'Enter'))")
-    specify_note = get_input()
-
-    while (True):
+    while True:
         save_count = 0
         submit_count = 0
         confirm_sub_count = 0
@@ -477,63 +605,69 @@ def perform_operation(url_link):
         try:
             print("opening driver")
             driver = click_url(driver, erp_link)
-            if (driver == False):
+            if driver == False:
                 break
 
-            while (True):
-                if (credientials_count >= 5):
+            while True:
+                if credientials_count >= 5:
                     break
                 print("Enterting User Name")
-                if (validate_page(click_erp_user_id, driver, user_name) == None):
+                if validate_page(click_erp_user_id, driver, user_name) == None:
                     credientials_count = credientials_count + 1
                     continue
                 print("Entering User Password")
-                if (validate_page(enter_erp_user_pwd, driver, user_pwd) == None):
+                if validate_page(enter_erp_user_pwd, driver, user_pwd) == None:
                     credientials_count = credientials_count + 1
                     continue
                 else:
                     break
-            if (credientials_count >= 5):
-                print("The Credentials that you have entered is wrong. Please Enter Valid Credentials and re-run the program.Thank you")
+            if credientials_count >= 5:
+                print("The Credentials that you have entered is wrong.")
+                print("Please Enter Valid Credentials and re-run the program.Thank you")
+
                 driver.close()
                 break
 
             print("Creating New Timesheet")
-            if (validate_page(create_new_time_sheet, driver) == False):
+            if validate_page(create_new_time_sheet, driver) == False:
                 continue
-            while (True):
-                if (fill_up_user_entries(driver) == False):
-                    if (nonexist_project_flag == True):
+            while True:
+                if fill_up_user_entries(driver) == False:
+                    if NONEXIST_PROJECT_FLAG == True:
                         break
                     fill_up_flag = True
                     break
 
                 time.sleep(1)
 
-                if (save_count >= 5 or submit_count >= 5 or confirm_sub_count >= 5):
+                if save_count >= 5 or submit_count >= 5 or confirm_sub_count >= 5:
                     break
 
-                if (validate_page(select_save_button, driver) == None):
+                if validate_page(select_save_button, driver) == None:
                     save_count = save_count + 1
                     continue
                 time.sleep(2.5)
-                if (validate_page(select_submit_button, driver) == None):
+                if validate_page(select_submit_button, driver) == None:
                     print("Repeat the following entries again")
                     submit_count = submit_count + 1
                     continue
 
                 time.sleep(2.5)
-                if (validate_page(confirm_submission, driver) == None):
+                if validate_page(confirm_submission, driver) == None:
                     confirm_sub_count = confirm_sub_count + 1
                     continue
                 else:
                     break
 
-            if (fill_up_flag == True or save_count >= 5 or submit_count >= 5 or confirm_sub_count >= 5):
+            if fill_up_flag == True or save_count >= 5 or\
+            submit_count >= 5 or confirm_sub_count >= 5:
+
                 driver.close()
                 continue
-            elif (nonexist_project_flag == True):
-                print("You have entered incorrect project name or the ERP could not find the project that you are working for.")
+            elif NONEXIST_PROJECT_FLAG == True:
+                print("You have entered incorrect project name or\
+                the ERP could not find the project that you are working for.")
+
                 print("Please enter valid project Name and re-run the program. Thank You")
                 driver.close()
                 break
@@ -546,39 +680,138 @@ def perform_operation(url_link):
 
     print("Thank you for using Timesheet Automation")
 
-def write_to_file(args):
-    path = os.getcwd() + '/erp_link.txt'
-    print("ERP link set to =", args.setlink)
 
-    f = open(path, "w+")
-    f.write(args.setlink)
+def validate_cmd_password(contents):
+    print("length=", len(contents))
+    if len(contents) != 2:
+        print("Error. Please give username along with password.Type the following command")
+        print("make setpassword username=yourusername password=yourpassword")
+        return False
+    return True
+
+
+def validate_cmd_url(contents):
+    print("length=", len(contents))
+    if len(contents) != 1:
+        print("Error. Please set the link correctly.Type the following command")
+        print("make setlink link=yourerplinkaddress")
+        return False
+    return True
+
+
+def add_newline(list_content):
+
+    for i in range(0, len(list_content)):
+        list_content[i] = list_content[i] + "\n"
+    return list_content
+
+
+def write_to_file(args, args_type):
+    text = args_type
+    print("text=", text)
+    print("texttype=", type(text))
+    if args_type == args.setpassword:
+        if validate_cmd_password(text) == False:
+            return False
+    elif args_type == args.setlink:
+        if validate_cmd_url(text) == False:
+            return False
+
+    path = expanduser("~") + '/erp_timesheet/erp_link.txt'
+
+    read_file_contents = read_file()
+
+    if read_file_contents == False or read_file_contents == []:
+        f = open(path, "w+")
+
+        text = add_newline(text)
+        f.writelines(text)
+        print("written")
+
+    elif read_file_contents != False:
+        file_contents = check_url(read_file_contents)
+
+        f = open(path, "w+")
+        if file_contents == False:
+            if check_url(text) == False:
+                text = add_newline(text)
+            else:
+                text = add_newline(text)
+                text = text + read_file_contents
+            f.writelines(text)
+        elif file_contents != False:
+            if check_url(text) == False:
+
+                content = []
+
+                print("readfile_contlist", read_file_contents)
+                print("readfile_contonly", read_file_contents[0])
+
+                content.append(read_file_contents[0])
+                text = add_newline(text)
+                content = content + text
+                print("content=", content)
+                f.writelines(content)
+
+            elif check_url(text) != False:
+                content = []
+                text = add_newline(text)
+                content = content + text
+                read_file_contents.pop(0)
+                content = content + read_file_contents
+                print("content=", content)
+                f.writelines(content)
     f.close()
+
 
 def read_file():
     try:
-        print("path set", os.path.dirname(__file__))
-        path =  os.path.dirname(__file__) + '/erp_link.txt'
+        path = expanduser("~") + '/erp_timesheet/erp_link.txt'
 
+        print(path)
         f = open(path, "r")
-        contents = f.read()
+        contents = f.readlines()
         f.close()
-        print(contents)
+        print("contents in file=", contents)
         return contents
     except:
         return False
 
+
+def check_url(contents):
+    for line in contents:
+        if line.find('http') >= 0:
+
+            read_file_contents = line
+            print("readurlline=", read_file_contents)
+            return read_file_contents
+    return False
+
+
+def print_url_error():
+    print("The ERP link is not set. Kindly set the ERP link address")
+    print("ERP link can be set by running the command 'make setlink link=your ERP Link'")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--setlink")
+    parser.add_argument("--setlink", nargs='+')
+    parser.add_argument("--setpassword", nargs='+')
     parser.set_defaults(func=write_to_file)
 
     args = parser.parse_args()
-if (args.setlink):
-    args.func(args)
+if args.setlink:
+
+    args.func(args, args.setlink)
+elif args.setpassword:
+
+    args.func(args, args.setpassword)
 else:
     contents = read_file()
-    if (contents == False):
-        print("The ERP link is not set. Please first set the ERP link address")
-        print("ERP link can be set by running the command 'make setlink link=[your ERP Link]'")
+
+    if contents == False:
+        print_url_error()
+    elif check_url(contents) == False:
+        print_url_error()
     else:
         perform_operation(contents)

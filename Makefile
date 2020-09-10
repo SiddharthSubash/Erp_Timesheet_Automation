@@ -17,9 +17,10 @@ install:
 setlink:
 	@echo "Setting up ERP LINK"
 	update_timesheet --setlink ${link}
-	mv erp_link.txt ~/erp_timesheet
+setpassword:
+	@echo "Setting up User credentials"
+	update_timesheet --setpassword ${username} ${password}
 clean:
 	rm -rf *~
+	rm -rf gecko*.log
 	rm -rf ~/erp_timesheet
-
-
