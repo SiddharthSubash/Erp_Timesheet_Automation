@@ -56,11 +56,15 @@ make setlink link=valid erp url address
 
 make setpassword username=yourusername password=yourpassword
 
-4) make clean - This command will remove the geckodriver tar file and its extracts.
-
-5) After following all the above steps, the user can run the program by typing "update_timesheet" in the terminal.
+4) After following all the above steps, the user can run the program by typing "update_timesheet" in the terminal.
 
 * The user can run the python code anywhere, since the "make install" command adds the python file's location to the PATH
+
+----------------------
+Cleaning the Project:
+----------------------
+
+make clean - This command will remove the geckodriver tar file and its extracts.
 
 -------------------
 Point To be Noted:
